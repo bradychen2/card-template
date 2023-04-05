@@ -29,6 +29,9 @@ export class ShowdownGame {
   public get turns(): number {
     return this._turns;
   }
+  private set turns(turns: number) {
+    this._turns = turns;
+  }
 
   private compareCards(card1: Card, card2: Card): Card {
     if (
@@ -91,12 +94,14 @@ export class ShowdownGame {
   }
 
   public drawCards(): void {
-    this.players.forEach((player: Player) => {
-      // every player has 13 cards in the start of the game
-      while (player.hands.length < 13) {
-        player.addHandCard(this._deck.drawTopCard());
-      }
-    });
+    while (this.deck.cards.length > 0) {
+      this.players.forEach((player: Player) => {
+        // every player has 13 cards in the start of the game
+        if (player.hands.length < 13) {
+          player.addHandCard(this.deck.drawTopCard());
+        }
+      });
+    }
   }
 
   public async takeTurns(): Promise<void> {
