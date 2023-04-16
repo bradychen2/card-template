@@ -18,6 +18,69 @@ describe("ShowdownGame", () => {
   const hearts = suits[2] as suit;
   const spades = suits[3] as suit;
 
+  describe("addPlayer()", () => {
+    it("should throw error if player is already in the game", () => {
+      const game = new ShowdownGame();
+      const player1 = new Player();
+      const player2 = new Player();
+      const player3 = new Player();
+      const player4 = new Player();
+      const player5 = new Player();
+
+      game["addPlayer"](player1);
+      game["addPlayer"](player2);
+      game["addPlayer"](player3);
+      game["addPlayer"](player4);
+
+      expect(game.players.length).toBe(4);
+      expect(() => game["addPlayer"](player5)).toThrowError(
+        "there're at most 4 players in a game"
+      );
+    });
+  });
+
+  describe("compareCards()", () => {
+    it("should correctly return the bigger card with the same rank: card2 > card1", () => {
+      const game = new ShowdownGame();
+      const card1 = new Card(clubs, 7);
+      const card2 = new Card(diamonds, 7);
+
+      const result = game["compareCards"](card1, card2);
+
+      expect(result).toEqual(card2);
+    });
+
+    it("should correctly return the bigger card with the same rank: card1 > card2", () => {
+      const game = new ShowdownGame();
+      const card1 = new Card(diamonds, 7);
+      const card2 = new Card(clubs, 7);
+
+      const result = game["compareCards"](card1, card2);
+
+      expect(result).toEqual(card1);
+    });
+
+    it("should correctly return the bigger card with the same suit: card2 > card1", () => {
+      const game = new ShowdownGame();
+      const card1 = new Card(clubs, 7);
+      const card2 = new Card(clubs, 8);
+
+      const result = game["compareCards"](card1, card2);
+
+      expect(result).toEqual(card2);
+    });
+
+    it("should correctly return the bigger card with the same suit: card1 > card2", () => {
+      const game = new ShowdownGame();
+      const card1 = new Card(clubs, 8);
+      const card2 = new Card(clubs, 7);
+
+      const result = game["compareCards"](card1, card2);
+
+      expect(result).toEqual(card1);
+    });
+  });
+
   describe("showdown()", () => {
     beforeEach(() => {});
 
@@ -226,6 +289,9 @@ describe("ShowdownGame", () => {
         .mockResolvedValueOnce(new Card(diamonds, 7))
         .mockResolvedValueOnce(new Card(hearts, 7))
         .mockResolvedValueOnce(new Card(spades, 7));
+      const removeCardFromHandsSpy = jest
+        .spyOn(Player.prototype, "removeCardFromHands")
+        .mockImplementation(() => {});
       const showdownSpy = jest.spyOn(ShowdownGame.prototype as any, "showdown");
 
       // Act
@@ -233,9 +299,71 @@ describe("ShowdownGame", () => {
 
       // Assert
       expect(selectSpy).toHaveBeenCalledTimes(4);
+      expect(removeCardFromHandsSpy).toHaveBeenCalledTimes(4);
       expect(showdownSpy).toHaveBeenCalledTimes(1);
       expect(players[3].points).toEqual(1);
       expect(game.turns).toEqual(0);
+    });
+  });
+
+  describe("endGame()", () => {
+    it("should correctly log the winner has the most points", async () => {
+      // Arrange
+      const game = new ShowdownGame();
+      const players = [new Player(), new Player(), new Player(), new Player()];
+      players[0].name = "Player-1";
+      players[1].name = "Player-2";
+      players[2].name = "Player-3";
+      players[3].name = "Player-4";
+
+      players[0].addPoint(1);
+      players[1].addPoint(2);
+      players[2].addPoint(3);
+      players[3].addPoint(4);
+
+      game["addPlayer"](players[0]);
+      game["addPlayer"](players[1]);
+      game["addPlayer"](players[2]);
+      game["addPlayer"](players[3]);
+
+      const logSpy = jest.spyOn(console, "log");
+
+      // Act
+      game["endGame"]();
+
+      // Assert
+      expect(logSpy).toHaveBeenCalledWith(`The winner is Player-4!!!!`);
+    });
+
+    it("should correctly log all players' points", async () => {
+      // Arrange
+      const game = new ShowdownGame();
+      const players = [new Player(), new Player(), new Player(), new Player()];
+      players[0].name = "Player-1";
+      players[1].name = "Player-2";
+      players[2].name = "Player-3";
+      players[3].name = "Player-4";
+
+      players[0].addPoint(1);
+      players[1].addPoint(2);
+      players[2].addPoint(3);
+      players[3].addPoint(4);
+
+      game["addPlayer"](players[0]);
+      game["addPlayer"](players[1]);
+      game["addPlayer"](players[2]);
+      game["addPlayer"](players[3]);
+
+      const logSpy = jest.spyOn(console, "log");
+
+      // Act
+      game["endGame"]();
+
+      // Assert
+      expect(logSpy).toHaveBeenCalledWith(`Player-1 - 1 points`);
+      expect(logSpy).toHaveBeenCalledWith(`Player-2 - 2 points`);
+      expect(logSpy).toHaveBeenCalledWith(`Player-3 - 3 points`);
+      expect(logSpy).toHaveBeenCalledWith(`Player-4 - 4 points`);
     });
   });
 });

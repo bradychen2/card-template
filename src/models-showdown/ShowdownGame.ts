@@ -12,7 +12,7 @@ export class ShowdownGame {
   }
 
   private addPlayer(player: Player) {
-    if (this.players.length > 4) {
+    if (this.players.length == 4) {
       throw new Error(`there're at most 4 players in a game`);
     }
     this.players.push(player);
@@ -71,26 +71,29 @@ export class ShowdownGame {
   private displayWinner(): void {
     let winner: Player = this.players[0];
     this.players.forEach((player: Player) => {
-      if (!winner) {
+      if (player.points > winner.points) {
         winner = player;
-      } else {
-        if (player.points > winner.points) {
-          winner = player;
-        }
       }
     });
     console.log(`The winner is ${winner.name}!!!!`);
   }
 
-  public async initGame(): Promise<void> {
+  private initPlayers(): void {
     for (let i = 0; i < 4; i++) {
       const newPlayer = new Player();
-      await newPlayer.nameSelf();
+      newPlayer.nameSelf();
       this.addPlayer(newPlayer);
     }
+  }
 
+  private initDeck(): void {
     this.deck = new Deck();
     this.deck.shuffle();
+  }
+
+  public initGame(): void {
+    this.initPlayers();
+    this.initDeck();
   }
 
   public drawCards(): void {
@@ -112,6 +115,7 @@ export class ShowdownGame {
       for (const player of this.players) {
         const selectedCard: Card = (await player.select()) as Card;
         showCards.push(selectedCard);
+        player.removeCardFromHands(selectedCard);
       }
       // determine the winner in this round
       const biggest: Card = this.showdown(showCards);
@@ -126,6 +130,9 @@ export class ShowdownGame {
 
       this._turns -= 1;
     }
+  }
+
+  public endGame(): void {
     this.displayScores();
     this.displayWinner();
   }

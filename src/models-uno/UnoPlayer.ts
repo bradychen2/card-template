@@ -1,32 +1,35 @@
-import { Card } from "./Card";
-import * as readline from "node:readline";
-import { stdin, stdout } from "node:process";
+import { UnoCard } from "./UnoCard";
+import readline from "readline";
+import { stdin, stdout } from "process";
 
-export class Player {
-  public name: string;
-  private _hands: Card[] = [];
-  private _points: number = 0;
+export class UnoPlayer {
+  private _name: string;
+  private _hands: UnoCard[] = [];
 
-  public get hands(): Card[] {
+  public get name(): string {
+    return this._name;
+  }
+
+  public set name(value: string) {
+    this._name = value;
+  }
+
+  public get hands(): UnoCard[] {
     return this._hands;
   }
 
-  public get points(): number {
-    return this._points;
+  public set hands(value: UnoCard[]) {
+    this._hands = value;
   }
 
-  public addPoint(point: number) {
-    this._points += point;
-  }
-
-  public addHandCard(card: Card) {
+  public addHandCard(card: UnoCard) {
     this.hands.push(card);
   }
 
-  private validateInputName(name: string): boolean {
+  private validateInputName(input: string): boolean {
     try {
       const pattern = /^[a-zA-Z0-9]+$/;
-      return name.length <= 20 && pattern.test(name);
+      return input.length <= 20 && pattern.test(input);
     } catch (error) {
       if (error instanceof Error) {
         console.error(`validateInputName error: ${error.message}`);
@@ -78,7 +81,7 @@ export class Player {
   private displayHandsCards(): void {
     console.log(`${this.name}'s hand cards:`);
     for (let i = 0; i < this.hands.length; i++) {
-      console.log(`${i + 1} - ${this.hands[i].suit} ${this.hands[i].rank}`);
+      console.log(`${i + 1} - ${this.hands[i].color} ${this.hands[i].number}`);
     }
   }
 
@@ -87,17 +90,17 @@ export class Player {
     return !(isNaN(answer) || answer < 1 || answer > this.hands.length);
   }
 
-  private selectCardFromHands(input: string): Card {
+  private selectCardFromHands(input: string): UnoCard {
     const index = parseInt(input) - 1;
     const selectedCard = this.hands[index];
     return selectedCard;
   }
 
-  private async selectPrompt(): Promise<Card | undefined> {
+  private async selectPrompt(): Promise<UnoCard | undefined> {
     return new Promise((resolve, reject) => {
       const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
+        input: stdin,
+        output: stdout,
       });
       this.displayHandsCards();
       rl.question(
@@ -106,13 +109,13 @@ export class Player {
           if (this.validateInputSelection(answer)) {
             const selectedCard = this.selectCardFromHands(answer);
             console.log(
-              `Selected card: ${selectedCard.rank} ${selectedCard.suit}`
+              `Selected card: ${selectedCard.color} ${selectedCard.number}`
             );
             rl.close();
             resolve(selectedCard);
           } else {
             console.error(
-              `Invalid input. Please enter a number between 1 and ${this.hands.length}.`
+              `invalid input. Plz select a card from 1 to ${this.hands.length}`
             );
             rl.close();
             resolve(undefined);
@@ -122,13 +125,13 @@ export class Player {
     });
   }
 
-  public async select(): Promise<Card | undefined> {
+  public async select(): Promise<UnoCard> {
     try {
-      let selectedCard: Card | undefined = undefined;
+      let selectedCard: UnoCard | undefined = undefined;
       while (!selectedCard) {
         selectedCard = await this.selectPrompt();
       }
-      return selectedCard as Card;
+      return selectedCard as UnoCard;
     } catch (error) {
       if (error instanceof Error) {
         console.error(`select error: ${error.message}`);
@@ -137,7 +140,7 @@ export class Player {
     }
   }
 
-  public removeCardFromHands(card: Card): void {
+  public removeCardFromHands(card: UnoCard): void {
     const index = this.hands.indexOf(card);
     if (index !== -1) {
       this.hands.splice(index, 1);

@@ -7,13 +7,16 @@ export class Deck {
     return this._cards;
   }
 
+  public set cards(cards: Card[]) {
+    this._cards = cards;
+  }
+
   constructor() {
     this.initDeck();
   }
 
   public initDeck(): void {
     const suits = Object.keys(SUITS);
-
     for (let rank = 1; rank < 14; rank++) {
       for (const suit of suits) {
         if (!isNaN(Number(suit))) continue;
